@@ -46,3 +46,4 @@ class Payment(models.Model):
     class Meta:
         verbose_name = 'Оплата'
         verbose_name_plural = 'Оплаты'
+        ordering = ('-payment_date',)
