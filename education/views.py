@@ -5,11 +5,22 @@ from rest_framework.filters import OrderingFilter
 
 from education.models import Lesson, Course, Payment
 from education.serializers import LessonSerializer, CourseDetailSerializer, PaymentSerializer, PaymentCreateSerializer
+from education.permissions import IsNotStaff
 
 
 class CourseViewSet(ModelViewSet):
     serializer_class = CourseDetailSerializer
     queryset = Course.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            return False
+        return super().create(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            return False
+        return super().destroy(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         new_course = serializer.save()
@@ -24,7 +35,8 @@ class LessonListAPIView(ListAPIView):
 
 class LessonCreateAPIView(CreateAPIView):
     serializer_class = LessonSerializer
-    queryset = Lesson.objects.all()
+    permission_classes = [IsNotStaff]
+
 
     def perform_create(self, serializer):
         new_lesson = serializer.save()
@@ -45,6 +57,7 @@ class LessonUpdateAPIView(UpdateAPIView):
 class LessonDestroyAPIView(DestroyAPIView):
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
+    permission_classes = [IsNotStaff]
 
 
 class PaymentListAPIView(ListAPIView):
