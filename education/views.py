@@ -2,15 +2,25 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView,
 from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
+from rest_framework.permissions import IsAuthenticated
 
 from education.models import Lesson, Course, Payment
 from education.serializers import LessonSerializer, CourseDetailSerializer, PaymentSerializer, PaymentCreateSerializer
-from education.permissions import IsNotStaff
+from education.permissions import IsNotStaff, IsOwnerOrStaff
 
 
 class CourseViewSet(ModelViewSet):
     serializer_class = CourseDetailSerializer
     queryset = Course.objects.all()
+    permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            return Course.objects.filter(owner=self.request.user)
+        elif self.request.user.is_staff:
+            return Course.objects.all()
+        else:
+            return False
 
     def create(self, request, *args, **kwargs):
         if request.user.is_staff:
@@ -30,7 +40,14 @@ class CourseViewSet(ModelViewSet):
 
 class LessonListAPIView(ListAPIView):
     serializer_class = LessonSerializer
-    queryset = Lesson.objects.all()
+
+    def get_queryset(self):
+        if not self.request.user.is_staff:
+            return Lesson.objects.filter(owner=self.request.user)
+        elif self.request.user.is_staff:
+            return Lesson.objects.all()
+        else:
+            return False
 
 
 class LessonCreateAPIView(CreateAPIView):
@@ -47,11 +64,13 @@ class LessonCreateAPIView(CreateAPIView):
 class LessonRetrieveAPIView(RetrieveAPIView):
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
+    permission_classes = [IsOwnerOrStaff]
 
 
 class LessonUpdateAPIView(UpdateAPIView):
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
+    permission_classes = [IsOwnerOrStaff]
 
 
 class LessonDestroyAPIView(DestroyAPIView):
