@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from education.models import Course, Lesson, Payment
+from education.validators import VideoLinkValidator
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -11,10 +12,11 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class LessonSerializer(serializers.ModelSerializer):
     course = serializers.SlugRelatedField(slug_field='title', queryset=Course.objects.all())
+    validators = [VideoLinkValidator(field='video_link')]
 
     class Meta:
         model = Lesson
-        fields = ('title', 'description', 'course',)
+        fields = ('title', 'description', 'course', 'video_link')
 
 
 class LessonListSerializer(serializers.ModelSerializer):
