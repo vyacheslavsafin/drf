@@ -10,6 +10,7 @@ from education.paginators import Paginator
 from education.serializers import LessonSerializer, CourseDetailSerializer, PaymentSerializer, PaymentCreateSerializer, \
     SubscriptionSerializer, SubscriptionListSerializer
 from education.permissions import IsNotStaff, IsOwnerOrStaff
+from education.utils import update_course_mailing
 
 
 class CourseViewSet(ModelViewSet):
@@ -40,6 +41,10 @@ class CourseViewSet(ModelViewSet):
         new_course = serializer.save()
         new_course.owner = self.request.user
         new_course.save()
+
+    def perform_update(self, serializer):
+        serializer.save(owner=self.request.user)
+        update_course_mailing(serializer)
 
 
 class LessonListAPIView(ListAPIView):
