@@ -3,9 +3,12 @@ from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 
-from education.models import Lesson, Course, Payment
-from education.serializers import LessonSerializer, CourseDetailSerializer, PaymentSerializer, PaymentCreateSerializer
+from education.models import Lesson, Course, Payment, Subscription
+from education.paginators import Paginator
+from education.serializers import LessonSerializer, CourseDetailSerializer, PaymentSerializer, PaymentCreateSerializer, \
+    SubscriptionSerializer, SubscriptionListSerializer
 from education.permissions import IsNotStaff, IsOwnerOrStaff
 
 
@@ -13,6 +16,7 @@ class CourseViewSet(ModelViewSet):
     serializer_class = CourseDetailSerializer
     queryset = Course.objects.all()
     permission_classes = [IsAuthenticated, IsOwnerOrStaff]
+    pagination_class = Paginator
 
     def get_queryset(self):
         if not self.request.user.is_staff:
@@ -40,6 +44,7 @@ class CourseViewSet(ModelViewSet):
 
 class LessonListAPIView(ListAPIView):
     serializer_class = LessonSerializer
+    pagination_class = Paginator
 
     def get_queryset(self):
         if not self.request.user.is_staff:
@@ -90,3 +95,29 @@ class PaymentListAPIView(ListAPIView):
 class PaymentCreateAPIView(CreateAPIView):
     serializer_class = PaymentCreateSerializer
     queryset = Payment.objects.all()
+
+
+class SubscriptionCreateAPIView(CreateAPIView):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsNotStaff]
+
+    def create(self, request, *args, **kwargs):
+        for subscription in Subscription.objects.filter(user=self.request.user):
+            if subscription.course.id == request.data.get('course'):
+                raise PermissionDenied('Вы уже подписаны на этот курс')
+        return super().create(request, *args, **kwargs)
+
+
+class SubscriptionListAPIView(ListAPIView):
+    serializer_class = SubscriptionListSerializer
+
+    def get_queryset(self):
+        return Subscription.objects.filter(user=self.request.user)
+
+
+class SubscriptionDestroyAPIView(DestroyAPIView):
+    serializer_class = SubscriptionSerializer
+    permission_classes = [IsNotStaff]
+
+    def get_queryset(self):
+        return Subscription.objects.filter(user=self.request.user)
