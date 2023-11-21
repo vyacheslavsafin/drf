@@ -10,6 +10,7 @@ class Course(models.Model):
     description = models.TextField(verbose_name='Описание курса', **NULLABLE)
     preview = models.ImageField(upload_to='education/', verbose_name='Превью курса', **NULLABLE)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, **NULLABLE)
+    price = models.PositiveIntegerField(default=1000, verbose_name='Стоимость курса')
 
     def __str__(self):
         return self.title
@@ -36,11 +37,13 @@ class Lesson(models.Model):
 
 
 class Payment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь', **NULLABLE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_payments', **NULLABLE)
     payment_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата оплаты')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name='Оплаченный курс')
     payment_total = models.PositiveIntegerField(verbose_name='Сумма оплаты', **NULLABLE)
     payment_method = models.CharField(choices=[('1', 'Наличные'), ('2', 'Перевод на счет')], verbose_name='Способ оплаты')
+    is_successful = models.BooleanField(default=False, verbose_name='Статус платежа')
+    session = models.CharField(max_length=150, verbose_name='Сессия для оплаты', **NULLABLE)
 
     def __str__(self):
         return f"{self.payment_date}:{self.user} - {self.course}"
