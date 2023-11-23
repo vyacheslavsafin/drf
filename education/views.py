@@ -45,8 +45,8 @@ class CourseViewSet(ModelViewSet):
         new_course.save()
 
     def perform_update(self, serializer):
-        serializer.save(owner=self.request.user)
-        update_course_mailing(serializer)
+        course_id = serializer.save(owner=self.request.user).id
+        update_course_mailing.delay(course_id)
 
 
 class LessonListAPIView(ListAPIView):

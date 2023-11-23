@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework_simplejwt',
     'drf_yasg',
+    'redis',
+    'django_celery_beat',
 
     'education',
     'users',
@@ -158,3 +160,14 @@ SERVER_EMAIL = EMAIL_HOST_USER
 EMAIL_ADMIN = EMAIL_HOST_USER
 
 STRIPE_SECRET_KEY = getenv('STRIPE_SECRET_KEY')
+
+CELERY_BROKER_URL = getenv('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = getenv('CELERY_RESULT_BACKEND')
+CELERY_TIMEZONE = getenv('TIME_ZONE')
+
+CELERY_BEAT_SCHEDULE = {
+    'task-name': {
+        'task': 'education.tasks.check_last_login',
+        'schedule': timedelta(days=1),
+    },
+}
