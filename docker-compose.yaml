@@ -36,5 +36,25 @@ services:
       db:
         condition: service_healthy
 
+  celery:
+    build: .
+    tty: true
+    command: celery -A config worker -l INFO
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - app
+
+  celery_beat:
+    build: .
+    tty: true
+    command: celery -A config beat -l INFO -S django
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - app
+
 volumes:
   pg_data:
